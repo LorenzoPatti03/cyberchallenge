@@ -1,0 +1,41 @@
+In questo tipo di esercizio, la vulnerabilità che hai sfruttato è legata al modo in cui un'applicazione web gestisce le richieste esterne, spesso indicata come SSRF (Server-Side Request Forgery) o, più semplicemente, come una cattiva gestione dei redirect.
+
+Ecco la spiegazione dettagliata da inserire nel tuo report:
+La Vulnerabilità: Perché il Redirect è "Pericoloso"?
+
+Il punto debole risiede nel fatto che il server della sfida (o l'applicazione target) si fida ciecamente della risposta che riceve dal tuo URL.
+
+    Fiducia Implicita: Molte applicazioni usano funzioni come file_get_contents() o librerie simili per "leggere" il contenuto di un URL fornito dall'utente.
+
+    Il Trucco del Redirect: Quando l'applicazione prova a leggere il tuo URL (esposto tramite Ngrok), il tuo script Python non le dà del testo, ma le ordina di fare un "salto" verso 0.0.0.0/get_flag.php.
+
+    Accesso a Risorse Protette: Poiché la richiesta di redirect viene eseguita dal server stesso (lato server), l'indirizzo 0.0.0.0 (o localhost) non punta più al tuo PC, ma alla memoria interna del server della sfida.
+
+    Il Risultato: L'applicazione finisce per leggere un file locale (get_flag.php) che normalmente sarebbe protetto o non accessibile dall'esterno, e te ne mostra il contenuto credendo che faccia parte del tuo sito.
+
+Gli Strumenti Utilizzati
+
+Per far abboccare il server a questa trappola, hai costruito un'infrastruttura in due pezzi:
+1. Lo Script Python (Il "Cervello")
+
+Hai usato Python perché permette di avere il controllo totale sugli header HTTP. Mentre un normale sito web ti manda una pagina HTML, il tuo script è stato programmato per mandare solo un'istruzione di comando (301 Redirect) e la destinazione (Location). Senza lo script, non avresti potuto manipolare il browser o il server della sfida in modo così preciso.
+2. Ngrok (Il "Ponte")
+
+Dato che il tuo server Python girava sul tuo computer (nella tua rete privata), il server della sfida non avrebbe mai potuto raggiungerlo.
+
+    Ngrok ha creato un tunnel pubblico.
+
+    Ha trasformato il tuo localhost:8080 in un indirizzo internet reale (es. https://random.ngrok-free.app).
+
+    Questo ha permesso al server della sfida di "uscire" su internet, bussare alla porta di Ngrok, e finire dritto dentro il tuo script Python.
+
+Riassunto della catena d'attacco:
+
+    Input: Dai l'URL di Ngrok all'applicazione vulnerabile.
+
+    Esecuzione: L'applicazione usa get_content sul tuo URL.
+
+    Inganno: Il tuo script Python risponde: "Vai su 0.0.0.0/get_flag.php".
+
+    Esfiltrazione: Il server della sfida obbedisce, legge la flag dal suo stesso sistema locale e te la restituisce.
+    
