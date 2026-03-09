@@ -2,7 +2,7 @@ import http.server
 import socketserver
 
 # Configurazione
-PORT = 9010 # Cambia da 8080 a 9000
+PORT = 9011 # Cambia da 8080 a 9000
 REDIRECT_TARGET = "http://localhost/get_flag.php"
 
 class RedirectHandler(http.server.SimpleHTTPRequestHandler):

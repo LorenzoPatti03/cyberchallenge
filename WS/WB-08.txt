@@ -1,0 +1,357 @@
+# Analisi della vulnerabilità Nginx nella configurazione `alias`
+
+## 1. Architettura generale del servizio
+
+La challenge utilizza un’architettura web tipica basata su tre componenti principali:
+
+1. **Nginx** – Web server che riceve le richieste HTTP.
+2. **uWSGI** – Application server che esegue l'applicazione Python.
+3. **Flask / app Python** – Applicazione vera e propria.
+
+Il flusso delle richieste è il seguente:
+
+Client → Nginx → uWSGI → Applicazione Python
+
+Nginx gestisce le richieste in ingresso sulla porta 80.
+Quando la richiesta riguarda file statici, li serve direttamente dal filesystem.
+Quando invece la richiesta riguarda l'applicazione web, la inoltra a uWSGI tramite un socket UNIX.
+
+---
+
+# 2. Analisi della configurazione Nginx
+
+La parte rilevante della configurazione è:
+
+```
+server {
+    listen 80;
+    server_name not_a_bug www.not_a_bug;
+
+    location / {
+        include uwsgi_params;
+        uwsgi_pass unix:///tmp/uwsgi.sock;
+    }
+
+    location /static {
+        alias /srv/app/static/;
+    }
+}
+```
+
+## Blocco `location /`
+
+```
+location / {
+    include uwsgi_params;
+    uwsgi_pass unix:///tmp/uwsgi.sock;
+}
+```
+
+Questa direttiva dice a Nginx:
+
+* tutte le richieste che non corrispondono ad altri blocchi `location`
+* devono essere inoltrate a **uWSGI**
+* tramite il socket
+
+```
+/tmp/uwsgi.sock
+```
+
+Quindi l'applicazione Python gestisce:
+
+```
+/
+/login
+/api
+/dashboard
+ecc...
+```
+
+---
+
+# 3. Gestione dei file statici
+
+Il blocco vulnerabile è questo:
+
+```
+location /static {
+    alias /srv/app/static/;
+}
+```
+
+Questa configurazione dice a Nginx:
+
+Quando un utente richiede:
+
+```
+/static/qualcosa
+```
+
+Nginx deve cercare il file in:
+
+```
+/srv/app/static/qualcosa
+```
+
+### Differenza tra `root` e `alias`
+
+`root` funziona così:
+
+```
+location /static {
+    root /srv/app;
+}
+```
+
+Richiesta:
+
+```
+/static/file.js
+```
+
+Diventa:
+
+```
+/srv/app/static/file.js
+```
+
+`alias` invece **sostituisce completamente il path della location**.
+
+Con:
+
+```
+alias /srv/app/static/;
+```
+
+Richiesta:
+
+```
+/static/file.js
+```
+
+Diventa:
+
+```
+/srv/app/static/file.js
+```
+
+Fin qui il comportamento sembra identico.
+
+---
+
+# 4. Il problema della slash mancante
+
+La configurazione sicura dovrebbe essere:
+
+```
+location /static/ {
+    alias /srv/app/static/;
+}
+```
+
+ma nella challenge è:
+
+```
+location /static
+```
+
+senza slash finale.
+
+Questo cambia completamente il modo in cui Nginx effettua il **matching delle URL**.
+
+---
+
+# 5. Come Nginx effettua il matching delle location
+
+Nginx seleziona la location basandosi sul **prefisso della URL**.
+
+Quindi:
+
+```
+location /static
+```
+
+matcha:
+
+```
+/static
+/static/
+/static/file
+/staticXYZ
+/static..
+```
+
+Questo è il punto chiave.
+
+La location cattura **più URL del previsto**.
+
+---
+
+# 6. L'exploit
+
+Se l'utente richiede:
+
+```
+/static../app.py
+```
+
+Nginx vede:
+
+```
+/static..
+```
+
+come prefisso valido per la location `/static`.
+
+Quindi entra nel blocco:
+
+```
+location /static
+```
+
+e applica:
+
+```
+alias /srv/app/static/
+```
+
+A questo punto il path diventa:
+
+```
+/srv/app/static/../app.py
+```
+
+Nel filesystem Linux:
+
+```
+static/../
+```
+
+significa:
+
+```
+torna alla cartella precedente
+```
+
+quindi il path reale diventa:
+
+```
+/srv/app/app.py
+```
+
+Il server quindi restituisce **un file fuori dalla directory static**.
+
+---
+
+# 7. Path Traversal risultante
+
+Questo permette di leggere file arbitrari nel filesystem del server.
+
+Esempi di richieste possibili:
+
+```
+/static../app.py
+/static../config.py
+/static../uwsgi.ini
+/static../../../../etc/passwd
+```
+
+Questo è un **directory traversal causato da misconfigurazione Nginx**.
+
+---
+
+# 8. Perché la configurazione è vulnerabile
+
+Il problema deriva dalla combinazione di due fattori:
+
+### 1️⃣ Location senza slash
+
+```
+location /static
+```
+
+matcha più path del previsto.
+
+### 2️⃣ Uso di `alias`
+
+`alias` sostituisce il path invece di concatenarlo.
+
+### 3️⃣ Normalizzazione del filesystem
+
+Linux interpreta:
+
+```
+../
+```
+
+come directory parent.
+
+Quindi:
+
+```
+/srv/app/static/../
+```
+
+diventa:
+
+```
+/srv/app/
+```
+
+---
+
+# 9. Configurazione corretta
+
+La configurazione sicura sarebbe:
+
+```
+location /static/ {
+    alias /srv/app/static/;
+}
+```
+
+In questo caso Nginx matcha solo:
+
+```
+/static/
+```
+
+e non:
+
+```
+/static..
+```
+
+Quindi l'exploit non funzionerebbe più.
+
+---
+
+# 10. Conclusione
+
+La vulnerabilità deriva da una **misconfigurazione di Nginx nel blocco `location` con `alias`**.
+
+L'assenza della slash finale nella location:
+
+```
+location /static
+```
+
+permette a Nginx di matchare URL non previste come:
+
+```
+/static..
+```
+
+Quando queste URL vengono combinate con `alias`, il risultato è un **path traversal nel filesystem del server**, permettendo la lettura di file fuori dalla directory statica.
+
+Questo tipo di vulnerabilità è molto comune nelle **CTF e negli audit di configurazioni Nginx** ed è causato da una comprensione incompleta della differenza tra:
+
+* `alias`
+* `root`
+* matching delle `location`.
+
+In questa challenge la vulnerabilità permette quindi di leggere file sensibili dell'applicazione, come:
+
+* codice sorgente (`app.py`)
+* file di configurazione
+* eventuali file contenenti la flag.
