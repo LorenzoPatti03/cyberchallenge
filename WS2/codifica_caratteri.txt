@@ -1,0 +1,90 @@
+GUIDA DEFINITIVA: CARATTERI, DECODIFICA E CONTESTI DI SICUREZZA
+==============================================================
+
+Questa guida spiega il percorso di un dato dall'URL alla pagina e come i 
+vari livelli di decodifica possano aprire falle di sicurezza (XSS).
+
+1. IL PERCORSO DEL DATO: CHI DECODIFICA E QUANDO?
+------------------------------------------------
+Il dato attraversa diverse fasi. La sicurezza dipende da quale livello 
+effettua la "trasformazione" da testo a codice.
+
+FASE 1: INVIO (Client -> Server)
+- Il Browser effettua l'URL ENCODING.
+- Esempio: scrivi <script> nella barra indirizzi -> diventa %3Cscript%3E.
+
+FASE 2: RICEZIONE E PARSING (Server-Side)
+- Il Server (PHP, Python, Node, ecc.) riceve l'URL.
+- DECODIFICA AUTOMATICA: Quasi tutti i linguaggi lato server decodificano 
+  automaticamente i parametri URL. 
+  Esempio: In PHP, $_GET['search'] conterrà già "<script>" (decodificato) 
+  e non "%3Cscript%3E".
+- [PUNTO CRITICO]: Se il server stampa questo valore decodificato senza 
+  filtri HTML, la vulnerabilità è servita.
+
+FASE 3: RENDERING (Browser - HTML Parser)
+- Il Browser riceve l'HTML dal server e cerca tag come <script> o <img>.
+- Se il server ha inviato &lt;, il browser visualizza "<" ma non lo esegue.
+- Se il server ha inviato <, il browser lo esegue come codice.
+
+FASE 4: ESECUZIONE (Browser - JavaScript Engine)
+- JavaScript non decodifica le stringhe da solo. 
+- Se search_word = "%3C%2Fscript%3E", rimane così.
+- Se però lo sviluppatore usa decodeURIComponent(), forza la decodifica 
+  manualmente, trasformando il testo in codice "vivo".
+
+
+2. CONTESTI DI INIEZIONE AFFRONTATI
+-----------------------------------
+
+A. CONTESTO JAVASCRIPT STRINGA (Dentro " " o ' ')
+- I caratteri sono "prigionieri". Per liberarli serve un apice (").
+- Se il server trasforma " in &#34;, l'attaccante non può chiudere la 
+  stringa. JavaScript leggerà &#34; come testo letterale e non come 
+  fine della variabile.
+
+B. CONTESTO "BREAKOUT" (Uscita dallo Script)
+- Il parser HTML vince sempre su quello JavaScript.
+- La stringa </script> chiude il blocco script anche se è dentro virgolette.
+- Una volta fuori, l'attaccante può usare tag HTML come <svg> o <img>.
+
+C. CONTESTO RITORNO A CAPO (%0A)
+- Inserire un ritorno a capo serve a tentare di isolare un comando su 
+  una nuova riga.
+- Esempio:
+  var x = "test";
+  alert(1); //
+- Se non si chiudono correttamente le virgolette della riga precedente, 
+  il browser darà "Syntax Error" e non eseguirà nulla.
+
+
+3. JQUERY E IL DOM (.html() vs .text())
+---------------------------------------
+È l'ultimo stadio della decodifica.
+
+- .html(dato): Prende la stringa e la "renderizza". Se il dato contiene 
+  tag decodificati (es. <img>), questi vengono attivati.
+- .text(dato): Prende la stringa e la inserisce come testo puro. 
+  È la difesa più efficace perché neutralizza qualsiasi tag o script.
+
+
+
+
+4. SINTESI TECNICA DEI CARATTERI
+--------------------------------
+| Carattere | URL Encoded | HTML Entity | Funzione in XSS |
+| :--- | :--- | :--- | :--- |
+| < | %3C | &lt; | Apre tag (es. <script>) |
+| > | %3E | &gt; | Chiude tag |
+| " | %22 | &quot; / &#34; | Chiude stringhe JS |
+| ' | %27 | &#39; | Chiude stringhe JS (alternativo) |
+| ` | %60 | &#96; | Template literals (bypass apici) |
+| / | %2F | &#47; | Chiude tag (es. </script>) |
+| \n | %0A | &#10; | Ritorno a capo (rompe le righe) |
+
+
+CONCLUSIONE PER LA SICUREZZA DEL SERVER:
+Per essere sicuro, il tuo server deve:
+1. Ricevere il dato (che arriva decodificato dall'URL).
+2. Applicare l'encoding HTML (&lt;, &gt;, &quot;) PRIMA di stamparlo.
+3. In JavaScript, trattare le variabili sempre con .text() o textContent.
