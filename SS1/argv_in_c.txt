@@ -1,0 +1,55 @@
+==========================================================================
+SPECIFICA TECNICA: ARGV E ARITMETICA DEI PUNTATORI (X86_64)
+==========================================================================
+
+1. DEFINIZIONE DI ARGV
+----------------------
+'argv' (Argument Vector) è un array di puntatori a stringhe (char**). 
+Non contiene i caratteri digitati dall'utente, ma gli INDIRIZZI di 
+memoria dove quelle stringhe sono state allocate dal Kernel.
+
+2. STRUTTURA DELL'ARRAY NELLO STACK
+-----------------------------------
+In un sistema a 64 bit, ogni puntatore (indirizzo) occupa 8 BYTE.
+L'array è memorizzato in modo contiguo. Per muoversi tra gli elementi, 
+il processore somma 8 byte alla base dell'array (param_2).
+
+MAPPA DEGLI OFFSET:
+--------------------------------------------------------------------------
+Offset          | Nome Tecnico | Contenuto (Esempio)    | Destinazione
+--------------------------------------------------------------------------
+param_2 + 0     | argv[0]      | 0x00007fffffffe550 --> | "flag_checker"
+param_2 + 8     | argv[1]      | 0x00007fffffffe568 --> | [Tuo Input/Flag]
+param_2 + 16    | argv[2]      | 0x0000000000000000 --> | NULL (Terminatore)
+--------------------------------------------------------------------------
+
+3. MECCANICA DI ACCESSO (DEREFERENZIAZIONE)
+-------------------------------------------
+L'accesso ai dati avviene in due step (Double Indirection):
+
+STEP A (Accesso al Puntatore): 
+Il programma legge il valore a (param_2 + 8). 
+Esempio: Ottiene l'indirizzo 0x7fffffffe568.
+
+STEP B (Accesso al Carattere):
+Il programma usa l'indirizzo ottenuto nello Step A per leggere i byte 
+reali. L'istruzione "MOV AL, [RAX]" carica il primo carattere ('C') 
+della stringa puntata.
+
+4. ANALISI DEL CRASH (SEGMENTATION FAULT)
+-----------------------------------------
+Il crash avviene se il programma esegue lo STEP B su un indirizzo nullo.
+- Se argc == 1 (nessun parametro fornito):
+  L'offset param_2 + 8 contiene 0x0000000000000000 (NULL).
+- Quando il programma tenta di leggere la memoria all'indirizzo 0x0, 
+  la MMU (Memory Management Unit) solleva un'eccezione di violazione 
+  di accesso, terminando il processo.
+
+5. SINTASSI GHIDRA / ASSEMBLY
+-----------------------------
+DAT_001040c0 = *(undefined8 *)(param_2 + 8);
+
+- (param_2 + 8): Calcolo della posizione del secondo puntatore.
+- (undefined8 *): Cast del tipo a puntatore da 64 bit.
+- * : Estrazione del valore (l'indirizzo della stringa).
+==========================================================================

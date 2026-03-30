@@ -1,0 +1,61 @@
+==========================================================================
+GUIDA ALL'ANALISI DELL'OFFUSCAMENTO ESADECIMALE (CTF & REVERSE)
+==========================================================================
+
+Quando vedi un array di byte "illeggibili" (come 0xBC, 0xAA, ecc.), il 
+programma sta nascondendo una stringa. Ecco i casi più comuni:
+
+1. INVERSIONE BIT A BIT (NOT / XOR 0xFF)
+----------------------------------------
+Descrizione: Ogni bit viene ribaltato. Lo 0 diventa 1, l'1 diventa 0.
+Identificazione in Ghidra (Assembly): 
+   - NOT EAX
+   - XOR EAX, 0xff
+Segnali: I byte sono quasi tutti > 0x80 (es. 0xBC, 0x90).
+Esempio: 0xBC diventa 0x43 ('C') dopo l'inversione.
+
+2. XOR CON CHIAVE FISSA (SINGLE-BYTE XOR)
+-----------------------------------------
+Descrizione: Ogni byte della stringa subisce l'operazione XOR con una 
+             chiave costante (es. 0x42).
+Identificazione in Ghidra (Assembly):
+   - XOR edx, 0x42  (dove 0x42 è la chiave)
+Segnali: Se conosci l'inizio della stringa (es. "flag{"), puoi trovare 
+         la chiave facendo: [Primo_Byte_Hex] XOR 'f'.
+In CyberChef: Usa "XOR" e inserisci la chiave in Hex.
+
+3. SOTTRAZIONE/ADDIZIONE (OFFSET O CESARE)
+------------------------------------------
+Descrizione: Viene aggiunto o sottratto un valore fisso a ogni carattere.
+Identificazione in Ghidra (Assembly):
+   - SUB EAX, 0x10
+   - ADD EAX, 0x05
+Segnali: La "distanza" tra i caratteri sembra corretta ma i valori sono 
+         traslati (es. invece di ABC vedi BCD).
+
+4. BIT ROTATION (ROL / ROR)
+---------------------------
+Descrizione: I bit "ruotano" all'interno del byte (quello che esce da un 
+             lato rientra dall'altro).
+Identificazione in Ghidra (Assembly):
+   - ROL AL, 0x3  (Rotate Left di 3 posizioni)
+   - ROR AL, 0x1  (Rotate Right di 1 posizione)
+Segnali: Molto difficile da vedere a occhio nudo, devi guardare l'istruzione 
+         Assembly nel ciclo.
+
+5. LITTLE-ENDIAN SWAP (IL CASO DEL "DATO AL CONTRARIO")
+-------------------------------------------------------
+Descrizione: I processori x86 leggono i gruppi di byte al contrario.
+Esempio in memoria: 67 6c 61 66  --> In Ghidra lo leggi come: 0x66616c67
+Risultato: "f" "l" "a" "g"
+Segnali: Vedi stringhe di 4 caratteri caricate direttamente nei registri 
+         (EAX, EBX) invece che un array.
+
+--------------------------------------------------------------------------
+COME DECODIFICARE VELOCEMENTE:
+1. Trova il ciclo (for/while) subito dopo l'assegnazione dei byte.
+2. Identifica l'operazione matematica (XOR, SUB, ADD, NOT).
+3. Usa CyberChef seguendo questo ordine nella Recipe:
+   - From Hex (Delimiter: Auto)
+   - [Operazione identificata, es: XOR con chiave FF]
+==========================================================================

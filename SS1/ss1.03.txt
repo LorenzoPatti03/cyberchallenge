@@ -1,0 +1,66 @@
+===========================================================================
+        ANALISI TECNICA: REVERSE ENGINEERING & DEBUGGING BINARIO
+===========================================================================
+
+1. ANALISI DELL'ENTRY POINT (_start)
+---------------------------------------------------------------------------
+All'avvio del programma (Entry Point), lo stack è configurato dal kernel 
+secondo l'ABI System V x86_64:
+
+- [RSP]: Contiene 'argc' (numero di argomenti).
+- [RSP + 8]: Contiene il puntatore all'array 'argv'.
+
+Nel disassemblato si nota:
+00101089  POP RSI            --> Estrae argc e lo mette nel 2° param.
+0010108a  MOV RDX, RSP       --> Copia l'indirizzo di argv nel 3° param.
+
+Ghidra rappresenta argv come "&stack0x00000008" perché è l'indirizzo 
+immediatamente successivo ad argc nello stack iniziale.
+
+2. LOGICA DELLA FUNZIONE RICORSIVA (FUN_00101169)
+---------------------------------------------------------------------------
+La funzione verifica la correttezza dell'input tramite una "Somma Target":
+
+- PARAMETRI:
+  - input (char*): Puntatore al carattere corrente della stringa utente.
+  - param_2 (int*): Puntatore all'elemento corrente dell'array dei target.
+  - param_3 (int): Somma accumulata dei caratteri precedenti.
+
+- IL "TARGET": 
+  Il programma calcola: param_3 = param_3 + *input.
+  Se questa somma è uguale al valore puntato da param_2, la funzione 
+  avanza (input+1, param_2+1) e richiama se stessa.
+
+3. LA CONDIZIONE DI VITTORIA (L'IF < 0)
+---------------------------------------------------------------------------
+L'istruzione "if (*param_2 < 0)" funge da SENTINELLA. 
+L'array dei target in memoria termina con un numero negativo (0xFFFFFFFF). 
+Solo se l'utente indovina tutti i caratteri e la somma coincide con ogni 
+tappa dell'array, il puntatore param_2 arriverà a leggere il valore 
+negativo, sbloccando la Flag e terminando il programma con exit(0).
+
+4. CAUSA DEL SEGMENTATION FAULT
+---------------------------------------------------------------------------
+Il crash (Segmentation Fault) avviene per "Stack Overflow":
+Se la somma (param_3) NON è uguale al target (*param_2), il programma 
+salta il blocco di avanzamento e cade nell'ultima riga:
+   FUN_00101169(local_10, local_18, param_3 - *local_10);
+
+Questa chiamata richiama la funzione senza avanzare i puntatori. Si crea 
+un ciclo infinito di ricorsione che esaurisce la memoria dello stack in 
+pochi millisecondi, causando il crash del sistema.
+
+5. SOLUZIONE (DECODIFICA)
+---------------------------------------------------------------------------
+Per trovare la stringa corretta (Flag), bisogna calcolare la differenza 
+tra i valori consecutivi nell'array DAT_00104020:
+
+Formula: Carattere_ASCII = Target_Attuale - Target_Precedente
+
+Esempio dai dati estratti:
+- Target 1: 0x54 (84)         --> 'T'
+- Target 2: 0xC3 (195)        --> 195 - 84 = 111 ('o')
+- Target 3: 0x122 (290)       --> 290 - 195 = 95 ('_')
+
+Stringa risultante: "To_i..."
+===========================================================================

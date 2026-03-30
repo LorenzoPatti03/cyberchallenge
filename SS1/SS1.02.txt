@@ -1,0 +1,2 @@
+Il programma chiama uno sleep e gli passa un tempo via via piu grande man mano che le lettere vanno avanti,
+ sono andato su ghidra ed ho modificato l'assembly per passargli sempre 0.

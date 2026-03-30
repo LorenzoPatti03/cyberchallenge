@@ -1,0 +1,74 @@
+==========================================================================
+ANALISI MEMORIA IN GHIDRA: VARIABILI LOCAL VS SIMBOLI DAT
+==========================================================================
+
+In un binario analizzato con Ghidra, la distinzione tra variabili 'local_' 
+e identificatori 'DAT_' riflette la struttura della memoria RAM (Stack vs Data).
+
+1. VARIABILI LOCALI (Prefisso: local_ )
+---------------------------------------
+Allocazione: STACK (Memoria LIFO)
+Riferimento Assembly: [EBP - offset] o [ESP + offset]
+
+CARATTERISTICHE TECNICHE:
+- Scope (Ambito): Valide solo all'interno della funzione corrente.
+- Ciclo di vita: Temporanee. Vengono create nel "Prologo" della funzione 
+  (sub esp, XX) e distrutte nell' "Epilogo" (leave/ret).
+- Indirizzamento: Relativo. L'indirizzo reale cambia a ogni esecuzione 
+  del programma (grazie all'ASLR) e a ogni chiamata di funzione.
+- Utilizzo tipico: Contatori di cicli (i, j), buffer temporanei per 
+  decodifica stringhe, variabili di calcolo intermedio.
+
+2. DATI STATICI/GLOBALI (Prefisso: DAT_ )
+-----------------------------------------
+Allocazione: SEZIONE DATI (.data, .rodata, .bss)
+Riferimento Assembly: Indirizzo assoluto (es. [0x00404070])
+
+CARATTERISTICHE TECNICHE:
+- Scope (Ambito): Globali. Accessibili da qualsiasi funzione del binario.
+- Ciclo di vita: Permanenti. Vengono caricate in memoria all'avvio del 
+  processo e rimosse solo alla chiusura.
+- Indirizzamento: Assoluto/Fisso. In Ghidra hanno un indirizzo costante 
+  scritto nell'intestazione del file (PE/ELF).
+- Utilizzo tipico: Stringhe fisse, variabili di stato globali, tabelle 
+  di lookup (S-Box), flag di sistema.
+
+3. CASI PARTICOLARI NELL'OFFUSCAMENTO
+-------------------------------------
+- STACK STRINGS: Il programma inizializza una serie di 'local_' con valori 
+  esadecimali (0xBC, 0x84...) per costruire una stringa nello stack. 
+  Questo serve a nascondere la stringa al comando 'strings'.
+- GLOBAL BUFFER: Un 'DAT_' che inizialmente appare come "00 ?? 00h" 
+  (vuoto) ma ha XREF di tipo (W)rite. Indica che il programma userà quello 
+  spazio per scrivere il risultato finale della decodifica.
+
+TABELLA DI CONFRONTO RAPIDO:
++-------------------+-------------------------+-------------------------+
+| Caratteristica    | Variable 'local_n'      | Symbol 'DAT_addr'       |
++-------------------+-------------------------+-------------------------+
+| Segmento RAM      | Stack                   | .data / .bss / .rodata  |
+| Persistenza       | Temporanea (Function)   | Persistente (Global)    |
+| Identificazione   | Offset dal Base Pointer | Indirizzo Virtuale fisso|
+| XREFs             | Solitamente limitati    | Spesso multipli (Inter-p)|
++-------------------+-------------------------+-------------------------+
+==========================================================================
+
+
+GUIDA RAPIDA ALLA LETTURA DEL MEMORY DUMP
+-----------------------------------------
+Esempio: 404058 01000000 00000000
+
+[404058]          -> INDIRIZZO: Il "civico" della memoria.
+[01000000]        -> DATI (DWORD): 4 byte di dati. 
+                     In Little-Endian si legge da destra a sinistra: 00 00 00 01.
+                     Valore decimale = 1.
+[....]            -> ASCII: Traduzione testuale. Se vedi punti, i dati sono 
+                     numeri o byte nulli (00).
+
+COSA CERCARE:
+1. Sequenze di byte diversi da 00: Sono i dati attivi del programma.
+2. Cambiamenti durante il debug: Se un 00 diventa un valore dopo una 
+   funzione, hai trovato dove il programma salva i risultati.
+3. Stringhe nascoste: Cerca sequenze che nell'ASCII (a destra) mostrano 
+   lettere o simboli coerenti.
+-----------------------------------------
