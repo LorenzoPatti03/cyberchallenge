@@ -1,0 +1,59 @@
+6. CODIFICHE INTERPRETATE DA JAVASCRIPT
+---------------------------------------
+JavaScript è in grado di decodificare diversi formati, sia tramite funzioni 
+esplicite che tramite l'interpretazione diretta del motore JS.
+
+A. URL ENCODING (Percent Encoding)
+   - Caratteri: %XX (es. %3C)
+   - Funzione di decodifica: decodeURIComponent("%3C") -> "<"
+   - Nota: È la codifica standard per i dati che viaggiano nell'URL.
+
+B. UNICODE / HEX ESCAPES (Dentro le stringhe)
+   - Formato: \uXXXX (Unicode) o \xXX (Hex)
+   - Esempio: "\u003c" -> "<" | "\x3c" -> "<"
+   - Comportamento: JavaScript decodifica questi valori AUTOMATICAMENTE se 
+     si trovano all'interno di una stringa nel codice sorgente. 
+     Un attaccante potrebbe usarli per nascondere parole chiave come "alert".
+
+C. BASE64 (Binary-to-Text)
+   - Formato: Stringhe alfanumeriche (es. YWxlcnQoMSk=)
+   - Funzione di decodifica: atob("YWxlcnQoMSk=") -> "alert(1)"
+   - Uso XSS: Spesso usato nei Data URI (es. <iframe src="data:text/html;base64,...">) 
+     per caricare intere pagine malevole già codificate.
+
+D. ENTITÀ HTML (Interpretate dal DOM)
+   - Formato: &name; o &#number; (es. &lt; o &#60;)
+   - Comportamento in JS: 
+     * Se scrivi: var x = "&lt;"; -> x rimane "&lt;" (JS non la decodifica).
+     * Se però fai: element.innerHTML = "&lt;"; -> Il DOM la decodifica e 
+       scrive "<" nella pagina.
+   - [RISCHIO]: Molti sviluppatori pensano che le entità siano sicure in JS, 
+     ma se passano attraverso funzioni che manipolano l'HTML, vengono "riattivate".
+
+E. TEMPLATE LITERALS (Backticks)
+   - Formato: `testo ${variabile}`
+   - Comportamento: Permettono l'esecuzione di codice (interpolazione) e 
+     accettano ritorni a capo reali senza rompere la sintassi. 
+     Sono spesso il bersaglio preferito per i bypass dei filtri sulle virgolette.
+
+
+7. TABELLA DI CONFRONTO PER IL BYPASS
+-------------------------------------
+Se un filtro blocca "<", l'attaccante proverà queste varianti:
+
+| Metodo           | Rappresentazione | Come viene decodificato?             |
+| :--------------- | :--------------- | :----------------------------------- |
+| URL Encode       | %3C              | decodeURIComponent() o parsing URL   |
+| HTML Entity (Dec)| &#60;            | Assegnazione a .innerHTML            |
+| HTML Entity (Hex)| &#x3c;           | Assegnazione a .innerHTML            |
+| Unicode Escape   | \u003c           | Automatico in stringhe JS            |
+| Hex Escape       | \x3c             | Automatico in stringhe JS            |
+| Base64           | PHN2Zz4=         | Funzione atob()                      |
+
+
+
+CONCLUSIONE SULLA DECODIFICA:
+La falla non è la codifica in sé, ma la "Fiducia Implicita". 
+Se il tuo codice decodifica un dato (con atob, decodeURIComponent o .html()) 
+e lo inserisce nel DOM senza averlo prima sanificato, stai trasformando 
+un testo inerte in un proiettile attivo.

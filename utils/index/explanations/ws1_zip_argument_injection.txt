@@ -1,0 +1,58 @@
+ANALISI TECNICA DELL'EXPLOIT: ZIP ARGUMENT INJECTION
+1. L'Analisi del Codice (Il Punto Debole)
+
+Nel file app.py, la funzione che genera un nuovo archivio ZIP dagli elementi caricati dall'utente contiene un errore critico di sicurezza:
+Python
+
+# Recupera la lista dei file nella cartella dell'utente
+files = os.listdir(path)
+
+# Costruisce il comando come una lista
+command = ['zip', new_zip_path]
+command += files  # <--- I nomi dei file vengono aggiunti come argomenti
+
+# Esegue il comando
+subprocess.run(command, shell=False, cwd=path)
+
+Anche se il programmatore ha usato shell=False (che impedisce di usare simboli come ; o | nel nome del file), il programma /usr/bin/zip riceve i nomi dei file come argomenti diretti. Se un file inizia con un trattino (-), zip lo tratterà come una opzione di configurazione e non come un semplice file da comprimere.
+2. La Strategia: "Argument Injection"
+
+L'obiettivo è "iniettare" dei parametri che costringano zip a eseguire un comando di sistema. Per farlo, utilizziamo due flag documentate nel manuale di zip:
+
+    -T (Test): Dice a zip di verificare che l'archivio appena creato sia integro.
+
+    -TT o --unzip-command: Permette all'utente di specificare quale comando usare per effettuare il test di integrità. Di default è unzip -tqq, ma noi lo sovrascriveremo.
+
+3. Il Payload in tre passaggi
+
+Poiché i sistemi Linux non permettono di usare il carattere / (slash) nel nome di un file, abbiamo dovuto dividere l'attacco in tre parti per poter eseguire /getflag:
+
+A. Lo Script Eseguibile (run.sh)
+Creiamo un file normale il cui contenuto sia il comando da eseguire. Qui lo slash è ammesso:
+echo "/getflag > flag2.txt" > run.sh
+
+B. Il Trigger di Test (-T)
+Creiamo un file vuoto il cui nome è semplicemente -T. Quando il server lo legge, aggiunge -T al comando zip, attivando la modalità di verifica.
+
+C. Il Comando Iniettato (--unzip-command=sh run.sh)
+Creiamo un secondo file vuoto con questo nome lungo. Quando zip lo legge, pensa che l'utente voglia usare sh run.sh per testare l'archivio.
+4. La Catena di Esecuzione (Logica Finale)
+
+Quando premiamo il pulsante sul sito per creare lo ZIP, il server Python esegue internamente questo comando:
+zip [nome_casuale].zip -T --unzip-command=sh run.sh run.sh
+
+Ecco cosa succede nella memoria del server:
+
+    Fase di Compressione: zip crea l'archivio includendo i file presenti.
+
+    Fase di Test (attivata da -T): Prima di chiudersi, zip vede che deve testare l'archivio.
+
+    Dirottamento del Test (attivato da -TT): Invece di chiamare unzip, il programma lancia il comando che abbiamo iniettato: sh run.sh.
+
+    Esecuzione del Payload: La shell esegue lo script run.sh. Lo script lancia l'eseguibile di sistema /getflag e scrive l'output nel file flag2.txt.
+
+    Risultato: Il server finisce di creare lo ZIP e noi ci ritroviamo con un nuovo file (flag2.txt) nella nostra cartella remota contenente la flag segreta.
+
+5. Conclusione Teorica
+
+Questo esercizio dimostra che non è necessario "rompere" la shell per ottenere una RCE (Remote Code Execution). Spesso è sufficiente manipolare gli argomenti che vengono passati a programmi di sistema legittimi (come zip, find o tar) se questi programmi hanno funzioni integrate per eseguire comandi esterni.

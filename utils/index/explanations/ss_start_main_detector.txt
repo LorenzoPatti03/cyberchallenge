@@ -1,0 +1,51 @@
+============================================================
+ANALISI REVERSE ENGINEERING: __LIBC_START_MAIN & NOP PADDING
+============================================================
+
+1. ANALISI DEI BYTE (NOP PADDING)
+------------------------------------------------------------
+I byte identificati all'indirizzo 001011c3:
+66 2e 0f 1f 84 00 00 00 00 00 0f 1f 00
+
+Questi byte non rappresentano una stringa di testo leggibile, 
+ma sono istruzioni "Multi-Byte NOP" (No-Operation). 
+
+Scopo: Allineamento della memoria. Il compilatore inserisce 
+questi byte tra le funzioni per fare in modo che la funzione 
+successiva inizi a un indirizzo multiplo di 16 byte, 
+ottimizzando le prestazioni della cache della CPU.
+
+2. LA FUNZIONE __LIBC_START_MAIN
+------------------------------------------------------------
+In Ghidra, questa funzione è il vero "motore" che avvia il 
+programma prima di arrivare al main().
+
+PROTOTIPO C:
+int __libc_start_main(
+    int (*main) (int, char **, char **), 
+    int argc, 
+    char **ubp_av, 
+    void (*init) (void), 
+    void (*fini) (void), 
+    void (*rtld_fini) (void), 
+    void (*stack_end)
+);
+
+PARAMETRI CHIAVE IN GHIDRA:
+- main:      Il puntatore alla funzione principale dell'utente. 
+             E' l'obiettivo primario dell'analisi.
+- argc/argv: Argomenti passati da riga di comando.
+- init:      Esegue i costruttori globali prima del main.
+- fini:      Esegue i distruttori dopo il main o all'exit.
+
+CONVENZIONE CHIAMATA (x86_64):
+- RDI: Indirizzo di 'main'
+- RSI: Valore di 'argc'
+- RDX: Indirizzo di 'argv'
+- RCX: Indirizzo di 'init'
+
+NOTE PER L'ANALISTA:
+Se il Decompiler di Ghidra mostra nomi generici (es. FUN_00101234), 
+identifica il primo argomento di __libc_start_main: quello è 
+quasi certamente il tuo punto di partenza per il reverse engineering.
+============================================================

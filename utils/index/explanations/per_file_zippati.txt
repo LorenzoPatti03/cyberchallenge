@@ -1,0 +1,3 @@
+base64 -d file 
+utilizzare il sito hexed per vedere ilf ormato dei file
+se hai file binari e non riescia acpire che sono usa xxd -r file

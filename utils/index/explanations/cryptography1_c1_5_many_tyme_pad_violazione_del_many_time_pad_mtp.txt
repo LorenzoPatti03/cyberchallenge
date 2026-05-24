@@ -1,0 +1,206 @@
+VIOLAZIONE DEL MANY TIME PAD (MTP)
+==================================
+
+1. INTRODUZIONE
+---------------
+Il Many Time Pad è una vulnerabilità che si verifica quando una chiave di cifratura
+usata in un One Time Pad viene riutilizzata per cifrare più messaggi.
+
+Ricordiamo che il One Time Pad (OTP) è teoricamente perfettamente sicuro solo se:
+- la chiave è lunga quanto il messaggio
+- la chiave è completamente casuale
+- la chiave viene usata una sola volta
+
+Se la chiave viene riutilizzata per più messaggi, il sistema diventa vulnerabile
+al cosiddetto attacco Many Time Pad.
+
+
+2. CIFRATURA CON XOR
+--------------------
+Nel One Time Pad la cifratura avviene tramite XOR tra il plaintext e la chiave.
+
+Formula:
+
+C = P XOR K
+
+dove:
+C = ciphertext
+P = plaintext
+K = key
+
+Per decifrare:
+
+P = C XOR K
+
+
+3. CASO DI RIUTILIZZO DELLA CHIAVE
+----------------------------------
+Supponiamo di avere due messaggi cifrati con la stessa chiave.
+
+C1 = P1 XOR K
+C2 = P2 XOR K
+
+Se facciamo XOR tra i due ciphertext:
+
+C1 XOR C2
+
+sostituendo:
+
+(P1 XOR K) XOR (P2 XOR K)
+
+usando le proprietà dello XOR:
+
+- A XOR A = 0
+- A XOR 0 = A
+- associatività e commutatività
+
+ottieniamo:
+
+C1 XOR C2 = P1 XOR P2
+
+
+4. CONSEGUENZA
+--------------
+Il risultato dello XOR tra due ciphertext elimina la chiave e produce lo XOR
+dei due plaintext.
+
+C1 XOR C2 = P1 XOR P2
+
+Questo è molto pericoloso perché ora possiamo lavorare direttamente sui
+plaintext.
+
+
+5. CRIB DRAGGING
+----------------
+Una tecnica molto usata per violare il Many Time Pad è il "crib dragging".
+
+L'idea è la seguente:
+- si ipotizza una parola probabile in uno dei messaggi
+- si fa XOR tra quella parola e il risultato P1 XOR P2
+- si osserva se il risultato produce testo plausibile
+
+Esempio di parole comuni:
+- the
+- and
+- message
+- attack
+- hello
+- password
+- space (spesso presente nei testi)
+
+
+6. IMPORTANZA DELLO SPAZIO
+--------------------------
+Lo spazio (ASCII 0x20) è molto utile negli attacchi MTP.
+
+Proprietà importante:
+
+lettera XOR spazio = cambia maiuscola/minuscola
+
+Questo permette di individuare facilmente dove sono presenti spazi nei messaggi
+analizzando C1 XOR C2.
+
+
+7. STRUMENTO DI RISOLUZIONE MTP DA SHELL
+----------------------------------------
+
+Possiamo usare strumenti da terminale per analizzare i ciphertext.
+
+Esempio con xxd e xor tramite script.
+
+Supponiamo di avere due file:
+
+cipher1.hex
+cipher2.hex
+
+
+Esempio di comando per convertire da hex a binario:
+
+xxd -r -p cipher1.hex > c1.bin
+xxd -r -p cipher2.hex > c2.bin
+
+
+XOR tra i due file con uno script python:
+
+python3 xor.py c1.bin c2.bin
+
+
+Esempio di script XOR semplice:
+
+--------------------------------
+import sys
+
+f1 = open(sys.argv[1], "rb").read()
+f2 = open(sys.argv[2], "rb").read()
+
+result = bytes([a ^ b for a, b in zip(f1, f2)])
+
+print(result)
+--------------------------------
+
+
+8. CRIB DRAGGING AUTOMATICO
+---------------------------
+Una volta ottenuto:
+
+P1 XOR P2
+
+possiamo testare parole candidate.
+
+Esempio Python:
+
+--------------------------------
+crib = b" the "
+
+for i in range(len(result) - len(crib)):
+    attempt = bytes([result[i+j] ^ crib[j] for j in range(len(crib))])
+    print(i, attempt)
+--------------------------------
+
+Se compare testo leggibile, probabilmente il crib è corretto.
+
+
+9. RECUPERO DELLA CHIAVE
+------------------------
+Quando riusciamo a indovinare una parte di plaintext:
+
+P1
+
+possiamo recuperare la chiave:
+
+K = C1 XOR P1
+
+A quel punto possiamo decifrare tutti i messaggi cifrati con quella chiave.
+
+
+10. RIASSUNTO ATTACCO
+---------------------
+Passaggi dell'attacco Many Time Pad:
+
+1) ottenere più ciphertext cifrati con la stessa chiave
+2) calcolare XOR tra ciphertext
+3) ottenere XOR tra plaintext
+4) usare crib dragging
+5) individuare parti di testo plausibili
+6) recuperare la chiave
+7) decifrare tutti i messaggi
+
+
+11. PERCHE' È UNA VULNERABILITÀ GRAVE
+-------------------------------------
+Il riutilizzo della chiave distrugge completamente la sicurezza del One Time Pad.
+
+Infatti:
+OTP sicuro  -> chiave usata una sola volta
+OTP vulnerabile -> chiave riutilizzata
+
+
+12. CONCLUSIONE
+---------------
+Il Many Time Pad dimostra quanto sia fondamentale la gestione delle chiavi
+nei sistemi crittografici.
+
+Anche un sistema teoricamente perfetto come il One Time Pad diventa facilmente
+attaccabile se si viola la regola fondamentale:
+
+"Never reuse the key."

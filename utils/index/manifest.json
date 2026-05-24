@@ -1,0 +1,336 @@
+{
+  "root": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge",
+  "output": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index",
+  "items": [
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/bruteforce.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/bruteforce_import_random.py",
+      "category": "templates",
+      "title": "import random"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/es1.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/es1_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/template_pwn2radare.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/template_pwn2radare_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/istruzioni_template.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/istruzioni_template_template_pwntools_radare2.txt",
+      "category": "explanations",
+      "title": "Template pwntools ↔ radare2"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-01.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_01_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-06.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_06_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-07.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_07_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-08.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_08_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-09.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_09_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-10.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_10_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-12.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_12_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-13.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_13_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-14.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_14_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-15.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_15_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/web-challenge/web-16.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/web_challenge_web_16_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-01.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ws1_ws_01_import_requests_string.py",
+      "category": "templates",
+      "title": "import requests, string"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-03l2.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_ws_03l2_analisi_tecnica_dell_exploit_zip_argument_injection.txt",
+      "category": "explanations",
+      "title": "ANALISI TECNICA DELL'EXPLOIT: ZIP ARGUMENT INJECTION"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-03l1.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_ws_03l1.txt",
+      "category": "explanations",
+      "title": "==============================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WB-08.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_wb_08_analisi_della_vulnerabilit_nginx_nella_configurazione_alias.txt",
+      "category": "explanations",
+      "title": "Analisi della vulnerabilità Nginx nella configurazione `alias`"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS2/codifica_caratteri.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws2_codifica_caratteri_guida_definitiva_caratteri_decodifica_e_contes_db1179bb8d",
+      "category": "explanations",
+      "title": "GUIDA DEFINITIVA: CARATTERI, DECODIFICA E CONTESTI DI SICUREZZA"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS2/codifiche _accettate_js.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws2_codifiche_accettate_js_6_codifiche_interpretate_da_javascript.txt",
+      "category": "explanations",
+      "title": "6. CODIFICHE INTERPRETATE DA JAVASCRIPT"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS2/WS_02.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ws2_ws_02_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/comandi_analisi_shell.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss_start_comandi_analisi_shell_guida_ai_comandi_di_reverse_engineering_linux.txt",
+      "category": "explanations",
+      "title": "📝 GUIDA AI COMANDI DI REVERSE ENGINEERING (LINUX)"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/main_detector.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss_start_main_detector.txt",
+      "category": "explanations",
+      "title": "============================================================"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/SS17.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ss_start_ss17_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/pwntools_comandi.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ss_start_pwntools_comandi_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/SS18.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ss_start_ss18_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/SS19.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ss_start_ss19_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS_start/SS0_05.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ss_start_ss0_05_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptography1/C1_5_many_tyme_pad.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/cryptography1_c1_5_many_tyme_pad_violazione_del_many_time_pad_mtp.txt",
+      "category": "explanations",
+      "title": "VIOLAZIONE DEL MANY TIME PAD (MTP)"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptography1/C1_6.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/cryptography1_c1_6_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptography1/C1_07.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/cryptography1_c1_07_import_string.py",
+      "category": "templates",
+      "title": "import string"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptohack/password_as_keys.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/cryptohack_password_as_keys_import_hashlib.py",
+      "category": "templates",
+      "title": "import hashlib"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptohack/cryptp_web3.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/cryptohack_cryptp_web3_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/cryptohack/cryptp_web5.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/cryptohack_cryptp_web5_import_jwt.py",
+      "category": "templates",
+      "title": "import jwt"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS1/differenza_local_dat.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss1_differenza_local_dat.txt",
+      "category": "explanations",
+      "title": "=========================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS1/offuscamento_della_flag_esadeimale.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss1_offuscamento_della_flag_esadeimale.txt",
+      "category": "explanations",
+      "title": "=========================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS1/funzione_start_elf.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss1_funzione_start_elf.txt",
+      "category": "explanations",
+      "title": "=========================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS1/argv_in_c.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss1_argv_in_c.txt",
+      "category": "explanations",
+      "title": "=========================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/SS1/ss1.03.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ss1_ss1_03.txt",
+      "category": "explanations",
+      "title": "==========================================================================="
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS_Start/WS19.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ws_start_ws19_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS_Start/WS20.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/ws_start_ws20_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/attacco_difesa/submit_flag.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/attacco_difesa_submit_flag_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/jeopardy-2025/boop.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/jeopardy_2025_boop_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/jeopardy-2025/rev_chall.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/jeopardy_2025_rev_chall_from_string_import_ascii_lowercase_ascii_uppercase.py",
+      "category": "templates",
+      "title": "from string import ascii_lowercase, ascii_uppercase"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/jeopardy-2025/rsa_slot_machine.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/jeopardy_2025_rsa_slot_machine_from_crypto_util_number_import_isprime_152b5354ca",
+      "category": "templates",
+      "title": "from Crypto.Util.number import isPrime, getPrime"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/jeopardy2024/YetAnotherShopChallenge.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/jeopardy2024_yetanothershopchallenge_import_requests.py",
+      "category": "templates",
+      "title": "import requests"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/scan_and_index.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/utils_scan_and_index_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-05l3/WS-05l3.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_ws_05l3_ws_05l3_in_questo_tipo_di_esercizio_la_vulnerabilit_che_h_5487b7ab05",
+      "category": "explanations",
+      "title": "In questo tipo di esercizio, la vulnerabilità che hai sfruttato è legata al modo in cui un'applicazione web gestisce le richieste esterne, spesso indicata come SSRF (Server-Side Request Forgery) o, più semplicemente, come una cattiva gestione dei redirect."
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-05l4/WS-05l4.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_ws_05l4_ws_05l4_analisi_tecnica_bypass_del_filtro_ssrf_via_parser_9dc05ffcc4",
+      "category": "explanations",
+      "title": "Analisi Tecnica: Bypass del Filtro SSRF via Parser Differential"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/WS1/WS-06/WS_06.txt",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/explanations/ws1_ws_06_ws_06_ssrf_challenge_writeup.txt",
+      "category": "explanations",
+      "title": "SSRF CHALLENGE WRITEUP"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/sfide_in_aula/SS/es1.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/sfide_in_aula_ss_es1_from_pwn_import.py",
+      "category": "templates",
+      "title": "from pwn import *"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/templates/pwntools_remote_local.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/utils_templates_pwntools_remote_local_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/templates/http_requests_session.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/utils_templates_http_requests_session_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    },
+    {
+      "source": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/templates/archive_unwrapper.py",
+      "destination": "/home/lorenzopatti/Documenti/cyberchallenge/cyberchallenge/utils/index/templates/utils_templates_archive_unwrapper_usr_bin_env_python3.py",
+      "category": "templates",
+      "title": "!/usr/bin/env python3"
+    }
+  ]
+}

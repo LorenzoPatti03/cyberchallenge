@@ -1,0 +1,169 @@
+Analisi Tecnica: Bypass del Filtro SSRF via Parser Differential
+
+Il codice fornito tenta di implementare una "Allowlist" e una protezione contro l'accesso a localhost. Tuttavia, fallisce a causa di come la stringa URL viene interpretata in momenti diversi da funzioni diverse.
+1. La vulnerabilità nel Processo di Validazione
+
+L'attacco sfrutta il fatto che l'URL passa attraverso tre "giudici" diversi, ognuno con la propria logica:
+
+    filter_var($url, FILTER_VALIDATE_URL): Verifica se la stringa somiglia a un URL.
+
+    parse_url($url): Scompone l'URL per estrarre l'host.
+
+    curl_init($url): Utilizza l'URL per effettuare la connessione reale.
+
+L'URL maligno utilizzato è: http://@127.0.0.1:80@deidra-vagal-rosamond.ngrok-free.dev/
+Fase A: Il bypass di parse_url
+
+Nel codice, l'host viene estratto così:
+PHP
+
+$parsed = parse_url($url);
+$host = $parsed['host']; // Risultato: "deidra-vagal-rosamond.ngrok-free.dev"
+
+Per le specifiche implementate in molte versioni di PHP, parse_url identifica l'host come ciò che si trova dopo l'ultima occorrenza del simbolo @. Di conseguenza:
+
+    Host rilevato: deidra-vagal-rosamond.ngrok-free.dev
+
+    Validazione IP: gethostbyname risolverà l'IP di ngrok (es. 18.x.x.x), che non è in 127.0.0.1/8.
+
+    Esito: Il controllo cidr_match viene superato con successo.
+
+Fase B: La discrepanza in libcurl
+
+Quando l'URL viene passato a curl_init($url), la libreria sottostante (libcurl) interpreta la struttura in modo differente rispetto a PHP:
+
+    Molte versioni di cURL leggono la prima @ come separatore delle credenziali utente.
+
+    Per cURL, l'host da contattare diventa quindi 127.0.0.1.
+
+    Tutto ciò che segue la seconda @ viene spesso trattato come parte della richiesta o ignorato.
+
+Risultato: Il server effettua una richiesta a se stesso (localhost), nonostante i controlli IP avessero analizzato il dominio ngrok.
+2. Analisi delle righe di codice vulnerabili
+PHP
+
+// VULNERABILITÀ 1: Affidamento cieco a un parser inconsistente
+$parsed = parse_url($url);
+$host = $parsed['host']; 
+
+// VULNERABILITÀ 2: DNS Rebinding / Time-of-Check Time-of-Use
+$true_ip = gethostbyname($host);
+// Tra questo controllo e l'esecuzione di curl_exec, l'IP potrebbe cambiare
+// o, come in questo caso, l'host analizzato non è quello usato da cURL.
+
+// VULNERABILITÀ 3: Utilizzo dell'URL grezzo (Raw URL)
+$ch = curl_init($url); // <--- L'URL originale non viene mai ricostruito o sanificato
+
+3. Il ruolo dell'indizio di Orange Tsai
+
+La "poesia" nei commenti non è casuale. Si riferisce alla ricerca di Orange Tsai presentata al Black Hat ("A New Era of SSRF").
+
+    "Orange it's the color of parsers": Indica che il problema risiede nel modo in cui i parser interpretano la gerarchia dell'URL (UserInfo, Host, Port).
+
+    "A-cause curl it just goes with the setopt": Evidenzia che curl_exec ignora le assunzioni fatte in precedenza da PHP, seguendo solo le proprie regole interne.
+
+4. Mitigazione: Come rendere il codice sicuro
+
+Per prevenire questa vulnerabilità, non bisogna mai passare l'URL originale a cURL dopo averlo validato. La procedura corretta è:
+
+    Risolvere l'host in un IP.
+
+    Validare l'IP (es. assicurarsi che non sia privato/loopback).
+
+    Ricostruire l'URL usando l'IP validato e forzare l'header Host.
+
+Esempio di patch:
+PHP
+
+$target_ip = gethostbyname($host);
+if (is_private_ip($target_ip)) { die("Accesso negato"); }
+
+// Connessione diretta all'IP, mantenendo l'host originale nell'header
+$ch = curl_init("http://" . $target_ip . "/");
+curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: " . $host));
+
+Nota sulla CSP (Content Security Policy)
+
+Il codice include:
+header("Content-Security-Policy: default-src 'none'; style-src cdnjs.cloudflare.com");
+Questa politica protegge il browser del visitatore impedendo l'esecuzione di script JavaScript o il caricamento di risorse esterne, ma non ha alcun effetto sulle richieste effettuate dal server (Server-Side). La CSP non può fermare un attacco SSRF.
+
+Desideri che ti mostri come implementare una funzione is_private_ip() completa per bloccare tutti i range di indirizzi interni (non solo 127.0.0.1)?
+Hai detto
+
+scrivi tutto un formato che posos copaire un file txt, url funziona se dopo metto /get_flag.php spiega anche questo , perchè l'utlima parte viuene presa?
+Gemini ha detto
+
+Ecco il documento tecnico completo, strutturato per essere salvato in un file .txt. Questo "paper" spiega la meccanica dell'attacco SSRF (Server-Side Request Forgery) basato sulle discrepanze dei parser, analizzando il tuo codice specifico.
+ANALISI TECNICA: BYPASS SSRF TRAMITE URL PARSER DIFFERENTIAL (CVE-2024-4577 CONTEXT)
+1. INTRODUZIONE
+
+Il codice analizzato presenta una vulnerabilità critica di tipo SSRF. Nonostante l'implementazione di filtri (IP check, protocollo HTTP/HTTPS, filter_var), un attaccante può forzare il server a effettuare richieste verso risorse interne (localhost) che dovrebbero essere protette.
+2. IL CODICE VULNERABILE
+PHP
+
+$url = $_GET['url'];
+if (filter_var($url, FILTER_VALIDATE_URL) === FALSE) { die('Not a valid URL'); }
+$parsed = parse_url($url);
+$host = $parsed['host'];
+$true_ip = gethostbyname($host);
+
+// FILTRO IP (FALLACE)
+if(cidr_match($true_ip, '127.0.0.1/8') || cidr_match($true_ip, '0.0.0.0/32')){
+    die('Not a valid URL');
+}
+
+$ch = curl_init($url); // <--- ERRORE: Usa l'URL originale non sanificato
+echo curl_exec($ch);
+
+3. MECCANICA DELL'ATTACCO: IL "PARSER DIFFERENTIAL"
+
+L'attacco si basa sulla differente interpretazione della stringa URL tra il motore PHP (parse_url) e la libreria cURL (libcurl).
+
+URL Utilizzato: http://@127.0.0.1:80@deidra-vagal-rosamond.ngrok-free.dev/get_flag.php
+
+A. Interpretazione di PHP (Fase di Validazione):
+PHP cerca l'autorità dell'host nell'URL. In presenza di molteplici simboli @, parse_url di PHP spesso identifica l'host come la stringa dopo l'ultima @.
+
+    Host estratto: deidra-vagal-rosamond.ngrok-free.dev
+
+    Validazione: gethostbyname interroga il DNS per ngrok, ottiene un IP pubblico e il controllo cidr_match (che verifica se l'IP è 127.0.0.1) viene superato. Il codice "si fida" dell'URL.
+
+B. Interpretazione di cURL (Fase di Esecuzione):
+La libreria cURL segue specifiche diverse. Molte versioni interpretano la prima @ come il delimitatore tra le credenziali (user:pass) e l'host.
+
+    Host contattato: 127.0.0.1
+
+    Risultato: cURL ignora la parte successiva dell'URL e interroga il server locale.
+
+4. PERCHÉ FUNZIONA "/get_flag.php"?
+
+Ti sei chiesto perché la parte finale viene "presa" correttamente nonostante la confusione sull'host.
+
+L'URL viene scomposto in: SCHEME :// USERINFO @ HOST : PORT / PATH
+
+Nella stringa http://@127.0.0.1:80@deidra-vagal-rosamond.ngrok-free.dev/get_flag.php:
+
+    Host Confusion: Come spiegato, PHP e cURL litigano su cosa sia l'HOST e cosa sia l'USERINFO.
+
+    Path Consistency: Entrambi i parser concordano che tutto ciò che inizia dopo il primo slash / che segue la sezione dell'host è il PATH.
+
+    Esecuzione: Una volta che cURL ha deciso che l'host è 127.0.0.1, appende semplicemente il path /get_flag.php alla richiesta. Il server locale riceve quindi una richiesta GET per un file che non sarebbe accessibile dall'esterno, ma lo è per il server stesso (SSRF).
+
+5. IL RIFERIMENTO A ORANGE TSAI
+
+L'indizio nei commenti cita la ricerca di Orange Tsai che ha dimostrato come la "superficie di attacco" degli URL sia immensa. Il "Question Mark" (?) citato nella poesia è un altro modo per confondere i parser:
+http://127.0.0.1#@ngrok-url/ -> PHP vede ngrok, cURL vede 127.0.0.1 perché considera il # (frammento) come fine dell'host.
+6. CONCLUSIONI E MITIGAZIONE
+
+La Content-Security-Policy (CSP) presente nel codice è inutile contro l'SSRF, poiché la CSP istruisce il browser, non il server.
+
+Soluzione corretta:
+Mai passare $url (l'input originale) a curl_init. Bisogna ricostruire l'URL usando l'IP che è stato appena validato:
+PHP
+
+$safe_url = "http://" . $true_ip . $parsed['path'];
+$ch = curl_init($safe_url);
+curl_setopt($ch, CURLOPT_HTTPHEADER, array("Host: " . $host));
+
+Ti servono i dettagli su come automatizzare il test di altri parser o su come proteggere definitivamente il server da richieste verso la rete interna?

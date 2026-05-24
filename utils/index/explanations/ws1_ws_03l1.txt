@@ -1,0 +1,88 @@
+===============================================================================
+ANALISI TECNICA VULNERABILITÀ: ZIPZAP (SYMLINK ATTACK & PATH TRAVERSAL)
+===============================================================================
+
+1. IL CONTESTO (L'OBIETTIVO)
+-------------------------------------------------------------------------------
+Il server ZipZap permette di caricare file .zip, li estrae in una cartella 
+temporanea (tmp_dir) e ne mostra il contenuto in una tabella HTML.
+L'obiettivo finale è leggere il file "/flag.txt" situato nella radice (root) 
+del file system del server, fuori dalla cartella utente.
+
+2. GENERAZIONE DETERMINISTICA DELLA CARTELLA (TMP_DIR)
+-------------------------------------------------------------------------------
+Il server non usa un ID casuale puro, ma lo calcola dai dati utente:
+- pwd = MD5(password)
+- tmp_dir = HMAC-SHA1(APP_SECRET, pwd + username)
+
+Perché è un rischio:
+- Se la APP_SECRET è debole o predefinita, un attaccante può calcolare 
+  offline il nome della cartella (brute-force).
+- Se l'utente cambia password, la cartella cambia e i vecchi file sono persi.
+
+3. L'ESTRAZIONE DELLO ZIP (IL MOTORE)
+-------------------------------------------------------------------------------
+Il codice esegue: subprocess.run(['unzip', '-j', '-o', zip_path], cwd=path)
+
+Analisi dei parametri del comando 'unzip':
+- '-j' (Junk Paths): Ignora le cartelle interne allo ZIP. Se lo ZIP contiene 
+     "cartella/file.txt", viene estratto solo come "file.txt". 
+     Questo serve a prevenire l'attacco "Zip Slip" (scrivere in ../../).
+- '-o' (Overwrite): Sovrascrive file esistenti senza chiedere conferma.
+- 'shell=False': Python passa i parametri direttamente al sistema operativo 
+     senza usare una shell (come /bin/sh). Questo impedisce la "Shell Injection" 
+     (caratteri come ; | & > vengono ignorati e trattati come testo).
+
+4. PERCHÉ I "CARATTERI EQUIVALENTI" (INJECTION) NON FUNZIONANO
+-------------------------------------------------------------------------------
+Molti provano a usare codifiche come %2f (slash) o caratteri speciali per 
+rompere il comando. Non funziona perché:
+- Senza Shell: Non c'è un interprete che trasforma ";" in un nuovo comando.
+- Filtro -j: Anche con nomi file camuffati, 'unzip' pulisce il nome e lo 
+  salva forzatamente dentro la cartella corrente (cwd=path).
+
+5. L'ARMA VINCENTE: IL LINK SIMBOLICO (SYMLINK)
+-------------------------------------------------------------------------------
+Il programmatore ha bloccato i PERCORSI (dove scrivi), ma non il TIPO DI FILE.
+Un Link Simbolico è un file speciale che non contiene dati, ma un "puntatore" 
+a un altro percorso nel sistema.
+
+Il ragionamento tecnico dell'attacco:
+A. SUL TUO PC: Crei un link simbolico: 'ln -s /flag.txt mia_flag'.
+B. NELLO ZIP: Crei l'archivio con 'zip --symlinks'. Lo ZIP salva un 
+   attributo speciale (bit LNK) che identifica il file come collegamento.
+C. SUL SERVER: Il server esegue 'unzip -j'. 
+   - Il comando vede il nome "mia_flag" (senza slash, quindi è considerato pulito).
+   - 'unzip' ricrea il link simbolico esattamente come lo hai fatto tu.
+   - Ora, nella cartella temporanea del server, esiste un file che è 
+     in realtà un portale verso /flag.txt.
+
+6. LA LETTURA (IL "TRADIMENTO" DI PYTHON)
+-------------------------------------------------------------------------------
+Quando clicchi sul nome del file "mia_flag" nel browser, il server esegue:
+   open('percorso/tmp_dir/mia_flag').read()
+
+Qui avviene il "zap":
+- La funzione open() di Python segue i link simbolici (follow symlinks).
+- Invece di leggere la scritta "/flag.txt", il sistema operativo attraversa 
+  il link e legge il VERO contenuto del file segreto /flag.txt.
+- La flag viene inviata al browser e visualizzata dall'utente.
+
+7. SCRIPT PER CREARE LO ZIP "TRAPPOLA" (PYTHON)
+-------------------------------------------------------------------------------
+Se non hai Linux, usa questo script per generare il file da caricare:
+
+import zipfile
+with zipfile.ZipFile('attacco.zip', 'w') as zf:
+    zi = zipfile.ZipInfo('mia_flag')
+    zi.external_attr = 0xA1ED0000  # Imposta il bit per Symlink su Linux
+    zf.writestr(zi, '/flag.txt')   # Il contenuto è il percorso bersaglio
+
+8. CONCLUSIONE
+-------------------------------------------------------------------------------
+La sicurezza è stata bypassata perché il programmatore si è fidato del 
+comando 'unzip' di sistema. Per correggere il bug, il server dovrebbe:
+1. Usare librerie Python native (zipfile) invece di subprocess.
+2. Controllare se il file estratto è un link con 'os.path.islink()'.
+3. Se è un link, cancellarlo immediatamente.
+===============================================================================

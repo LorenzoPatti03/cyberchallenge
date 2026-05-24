@@ -1,0 +1,80 @@
+📝 GUIDA AI COMANDI DI REVERSE ENGINEERING (LINUX)
+1. STRINGS (Analisi Statica delle Stringhe)
+
+    Cosa fa: Estrae sequenze di caratteri stampabili dai file binari.
+
+    Perché usarlo: È il primo passo per trovare flag "hardcoded" (scritte direttamente nel codice) o messaggi di sistema.
+
+    Utilizzo:
+
+        strings <file> : Mostra tutte le stringhe.
+
+        strings -n 10 <file> : Mostra solo stringhe più lunghe di 10 caratteri.
+
+        strings -t x <file> : Mostra l'indirizzo (offset) della stringa nel file.
+
+2. LDD (Verifica Dipendenze)
+
+    Cosa fa: Elenca le librerie dinamiche (Shared Objects) necessarie al programma.
+
+    Perché usarlo: Per capire se il binario è dinamico (usa librerie esterne come libc) o statico (tutto il codice è dentro il file).
+
+    Utilizzo:
+
+        ldd <file>
+
+        Nota: Se risponde "not a dynamic executable", il file è statico.
+
+3. OBJDUMP (Il Disassemblatore)
+
+    Cosa fa: Mostra le informazioni interne del file e trasforma i byte in istruzioni Assembly.
+
+    Perché usarlo: Per leggere il codice senza un'interfaccia grafica o per vedere le diverse sezioni del file (.text, .data, .rodata).
+
+    Utilizzo:
+
+        objdump -d -M intel <file> : Disassembla il codice con sintassi Intel (più chiara).
+
+        objdump -s <file> : Mostra il contenuto completo di tutte le sezioni in esadecimale.
+
+        objdump -h <file> : Elenca le sezioni del file e i loro indirizzi.
+
+4. LTRACE (Library Trace - Dinamico)
+
+    Cosa fa: Intercetta le chiamate alle funzioni di libreria (es. strcmp, printf, malloc).
+
+    Perché usarlo: Fondamentale per vedere i dati "in chiaro" passati alle funzioni mentre il programma gira.
+
+    Utilizzo:
+
+        ltrace ./<file> : Esecuzione standard.
+
+        ltrace -s 100 ./<file> : Aumenta la dimensione delle stringhe stampate (evita i tre puntini ...).
+
+        ltrace -f ./<file> : Segue anche i processi figli (fork).
+
+5. STRACE (System Trace - Dinamico)
+
+    Cosa fa: Intercetta le chiamate di sistema (System Calls) fatte al Kernel (es. open, read, write, access).
+
+    Perché usarlo: Funziona anche su binari statici o "stripped" (senza nomi di funzioni). È la spia definitiva per vedere come il programma interagisce con i file e il sistema.
+
+    Utilizzo:
+
+        strace ./<file> : Mostra tutto il traffico col Kernel.
+
+        strace -e access ./<file> : Filtra solo la chiamata "access".
+
+        strace -f ./<file> : Segue i figli (indispensabile se vedi "parent/child" nell'output).
+
+🚀 FLUSSO DI LAVORO CONSIGLIATO (CTF)
+
+    file <nome_file> : Per sapere se è a 32/64 bit e se è statico/dinamico.
+
+    strings <nome_file> | grep flag : Per il colpo di fortuna immediato.
+
+    ltrace ./<nome_file> : Per vedere se la flag viene confrontata o stampata via libreria.
+
+    strace -f ./<nome_file> : Per vedere se la flag viene usata come nome file o letta dal sistema.
+
+    Ghidra : Se tutti i precedenti falliscono, si passa all'analisi del codice.

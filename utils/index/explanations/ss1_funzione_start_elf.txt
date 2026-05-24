@@ -1,0 +1,116 @@
+==========================================================================
+FOCUS TECNICO: ENTRY POINT (_start) E GESTIONE STACK PARAMETRI
+==========================================================================
+
+1. IL FLUSSO DI ESECUZIONE INIZIALE
+----------------------------------
+Quando lanci un binario, il Kernel non chiama 'main'. Il flusso è:
+Kernel -> [Caricamento ELF] -> _start -> __libc_start_main -> main
+
+La funzione _start è scritta in Assembly e ha un compito preciso: 
+preparare lo stack per la C Runtime (LIBC).
+
+2. LAYOUT DELLO STACK AL MOMENTO DEL BOOT
+-----------------------------------------
+Appena il programma parte, lo Stack Pointer (RSP/ESP) punta a una 
+struttura dati fissa creata dal Sistema Operativo:
+
+Indirizzo           | Contenuto                | Descrizione
+--------------------------------------------------------------------------
+[RSP]               | argc                     | Numero di argomenti (Intero)
+[RSP + 8]           | argv[0] (Puntatore)      | Indirizzo stringa Nome Programma
+[RSP + 16]          | argv[1] (Puntatore)      | Indirizzo stringa 1° Parametro
+...                 | ...                      | ...
+[RSP + N]           | NULL (0x00000000)        | Fine dell'array argv
+[RSP + N + 8]       | envp[0] (Puntatore)      | Inizio Variabili d'Ambiente
+
+3. DECODIFICA DI __libc_start_main (Ghidra)
+-------------------------------------------
+Nella chiamata che hai visto in Ghidra:
+__libc_start_main(main, param_2, &stack0x00000008, ...)
+
+- param_2: È il valore di 'argc' (minimo 1).
+- &stack0x00000008: È l'indirizzo dove inizia 'argv'. 
+  * Nota: '08' non è un valore a 4 bit, ma l'offset di 8 byte (64 bit) 
+    necessario per saltare 'argc' e arrivare ai puntatori delle stringhe.
+
+4. PERCHÉ IL PROGRAMMA VA IN SEGMENTATION FAULT?
+------------------------------------------------
+Se il crash avviene nei primi istanti, controlla queste tre anomalie:
+
+A. Accesso Invalido a argv[1]:
+   Il codice prova a leggere un parametro che non hai passato. 
+   Esempio: prova a dereferenziare [RSP + 16], ma se argc è 1, 
+   quell'indirizzo contiene NULL (0x0). Leggere 0x0 = CRASH.
+
+B. Disallineamento dello Stack (Alignment):
+   Le moderne CPU (x64) richiedono che RSP sia multiplo di 16 prima di 
+   chiamate a funzioni che usano istruzioni SSE/AVX. Se _start o un 
+   wrapper manipolano RSP in modo errato, il programma esplode.
+
+C. Hardcoded Stack:
+   In alcune sfide, _start carica un indirizzo fisso in RSP (es. MOV RSP, 0x4000).
+   Se quell'indirizzo non è scrivibile nella Memory Map, il crash è certo.
+
+5. VERIFICA PRATICA (GDB/Debugger)
+----------------------------------
+Per confermare dove punta lo stack "giusto":
+1. 'break _start' -> 'run'
+2. 'info registers rsp' -> Segnati l'indirizzo.
+3. 'x/gx $rsp' -> Vedrai argc.
+4. 'x/s *($rsp+8)' -> Dovresti leggere il nome del tuo file.
+==========================================================================
+
+======================================================
+ANALISI DETTAGLIATA: ENTRY POINT E __LIBC_START_MAIN
+======================================================
+
+1. LA FIRMA DI _START (L'ENTRY POINT)
+-------------------------------------
+A differenza delle normali funzioni C, l'entry point '_start' non riceve 
+parametri tramite i registri secondo la normale ABI chiamante. 
+Al contrario, quando il kernel avvia il processo, lo stato è:
+
+- RSP: Punta direttamente all'inizio dei dati (argc).
+- RDX: Contiene un puntatore a una funzione di finalizzazione (rtld_fini).
+
+Non c'è un prologo della funzione (push rbp / mov rbp, rsp), quindi 
+lo stack è "piatto" e contiene i dati grezzi del sistema operativo.
+
+2. LO STACK AL MOMENTO DEL LANCIO
+---------------------------------
+Indirizzo          | Contenuto                | Descrizione
+-------------------|--------------------------|-------------------------
+[RSP]              | argc                     | Numero argomenti (8 byte)
+[RSP + 8]  <--     | argv[0]                  | Puntatore a stringa nome
+[RSP + 16]         | argv[1]                  | Primo argomento reale
+...                | ...                      | ...
+[RSP + N]          | NULL                     | Fine array argv
+[RSP + N + 8]      | envp[0]                  | Variabili d'ambiente
+
+Ghidra indica "&stack0x00000008" proprio perché sta referenziando 
+l'indirizzo di memoria che si trova 8 byte sopra la cima dello stack attuale.
+
+3. PASSAGGIO DEI PARAMETRI A __LIBC_START_MAIN
+----------------------------------------------
+Il codice assembly generato dal compilatore per l'entry point prepara 
+i registri per chiamare la funzione di inizializzazione della libc:
+
+- RDI: main           -> Puntatore alla funzione main (FUN_00101260)
+- RSI: argc           -> Caricato da [RSP]
+- RDX: argv           -> Caricato con 'lea rdx, [rsp + 8]' (&stack0x00000008)
+- RCX: init           -> Puntatore alla funzione di init
+- R8:  fini           -> Puntatore alla funzione di fini
+- R9:  rtld_fini      -> Passato dal kernel (param_1 nel tuo decompilato)
+- Stack: stack_end    -> Indirizzo locale (auStack_8)
+
+4. CONCLUSIONE SULL'OFFSET +8
+-----------------------------
+Il passaggio di &stack0x00000008 non è un errore di indice, ma il modo 
+corretto di passare l'intero array 'argv'. 
+Se passasse [RSP + 8] (senza '&'), passerebbe solo il nome del file. 
+Passando l'indirizzo (&), passa il puntatore al puntatore, che è 
+esattamente ciò che il main si aspetta per 'char **argv'.
+
+------------------------------------------------------
+Analisi tecnica per reverse engineering su architettura x86_64
